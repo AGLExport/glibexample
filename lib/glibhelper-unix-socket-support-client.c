@@ -43,7 +43,7 @@ struct s_glibhelper_unix_socket_client_support {
  * @retval TRUES Success callback or non abnormal error.
  * @retval FALSE Critical error. Callback stop.
  */
-int glibhelper_client_get_fd(glibhelper_unix_socket_client_support handle)
+int glibhelper_client_get_fd(glibhelper_client_session_handle handle)
 {
 	struct s_glibhelper_unix_socket_client_support *helper = NULL;
 	int fd = -1;
@@ -67,7 +67,7 @@ int glibhelper_client_get_fd(glibhelper_unix_socket_client_support handle)
  * @retval TRUES Success callback or non abnormal error.
  * @retval FALSE Critical error. Callback stop.
  */
-void* glibhelper_client_get_userdata(glibhelper_unix_socket_client_support handle)
+void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle)
 {
 	struct s_glibhelper_unix_socket_client_support *helper = NULL;
 
@@ -94,8 +94,8 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 								gpointer data)
 {
 	struct s_glibhelper_unix_socket_client_support *helper = NULL;
-	struct s_gelibhelper_io_channel *session = NULL;
-	GList* listptr = NULL;
+	//struct s_gelibhelper_io_channel *session = NULL;
+	//GList* listptr = NULL;
 	int sessionfd = -1;
 
 	if (source == NULL || data == NULL)
@@ -107,7 +107,7 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 	if ((condition & (G_IO_ERR | G_IO_HUP)) != 0) {	 //Client side socket was closed.
 		// Cleanup session
 		if (helper->operation.destroyed_session != NULL)
-			helper->operation.destroyed_session((glibhelper_client_session_handle)session);
+			helper->operation.destroyed_session((glibhelper_client_session_handle)helper);
 
 		g_source_destroy(helper->cli.event_source);
 		g_io_channel_unref(helper->cli.gio_source);

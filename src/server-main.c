@@ -30,7 +30,12 @@ static void get_new_session_cb(glibhelper_server_session_handle session)
 //-----------------------------------------------------------------------------
 static gboolean receive_cb(glibhelper_server_session_handle session)
 {
-	
+	//dummy read
+	uint64_t hoge[4];
+	int fd = glibhelper_server_get_fd(session);
+	int ret = read(fd, hoge, sizeof(hoge));
+	fprintf (stderr, "cli in %d\n",ret);
+
 	return TRUE;
 }
 //-----------------------------------------------------------------------------

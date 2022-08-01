@@ -30,7 +30,12 @@ static void get_new_session_cb(glibhelper_server_session_handle session)
 //-----------------------------------------------------------------------------
 static gboolean receive_cb(glibhelper_server_session_handle session)
 {
-	
+	//dummy read
+	uint64_t hoge[4];
+	int fd = glibhelper_server_get_fd(session);
+	int ret = read(fd, hoge, sizeof(hoge));
+	fprintf (stderr, "cli in %d\n",ret);
+
 	return TRUE;
 }
 //-----------------------------------------------------------------------------
@@ -47,8 +52,8 @@ static gboolean timeout_cb(glibhelper_timerfd_support_handle handle)
 }
 //-----------------------------------------------------------------------------
 static glibhelper_server_socket_config scfg = {
-	.socket_name = SOCKET_NAME
-	//.socket_name = "@/agl/testserver";
+	//.socket_name = SOCKET_NAME
+	.socket_name = "\0/agl/testserver"
 };
 
 static 	glibhelper_timerfd_config tcfg = {

@@ -60,12 +60,14 @@ typedef struct s_glibhelper_client_socket_config {
 //-----------------------------------------------------------------------------
 gboolean glibhelper_create_server_socket(glibhelper_unix_socket_server_support *handle, GMainContext *context, glibhelper_server_socket_config *config, void *userdata);
 gboolean glibhelper_terminate_server_socket(glibhelper_unix_socket_server_support handle);
+int glibhelper_server_get_fd(glibhelper_server_session_handle handle);
+void* glibhelper_server_get_userdata(glibhelper_server_session_handle handle);
 
 //-----------------------------------------------------------------------------
 gboolean glibhelper_connect_socket(glibhelper_unix_socket_client_support *handle, GMainContext *context, glibhelper_client_socket_config *config, void* userdata);
 gboolean glibhelper_terminate_client_socket(glibhelper_unix_socket_client_support handle);
-int glibhelper_client_get_fd(glibhelper_unix_socket_client_support handle);
-void* glibhelper_client_get_userdata(glibhelper_unix_socket_client_support handle);
+int glibhelper_client_get_fd(glibhelper_client_session_handle handle);
+void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle);
 
 //-----------------------------------------------------------------------------
 #endif //#ifndef GLIBHELPER_UINX_SOCKET_SUPPORT_H

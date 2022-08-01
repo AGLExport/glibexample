@@ -33,6 +33,52 @@ struct s_glibhelper_unix_socket_server_support {
 	GList *clientlist;
 	int socketbuf_size;
 };
+/**
+ *
+ *
+ * @param [in]	source	Pointor for active GIOChannel
+ * @param [in]	condition	I/O event condition.
+ * @param [in]	data	Pointer for 
+ *
+ * @return gboolean
+ * @retval TRUES Success callback or non abnormal error.
+ * @retval FALSE Critical error. Callback stop.
+ */
+int glibhelper_server_get_fd(glibhelper_server_session_handle handle)
+{
+	struct s_gelibhelper_io_channel *session = NULL;
+	int fd = -1;
+
+	if ( handle == NULL)
+		return -1;
+
+	session = (struct s_gelibhelper_io_channel*)handle;
+	fd = g_io_channel_unix_get_fd (session->gio_source);
+
+	return fd;
+}
+/**
+ *
+ *
+ * @param [in]	source	Pointor for active GIOChannel
+ * @param [in]	condition	I/O event condition.
+ * @param [in]	data	Pointer for 
+ *
+ * @return gboolean
+ * @retval TRUES Success callback or non abnormal error.
+ * @retval FALSE Critical error. Callback stop.
+ */
+void* glibhelper_server_get_userdata(glibhelper_server_session_handle handle)
+{
+	struct s_gelibhelper_io_channel *session = NULL;
+
+	if ( handle == NULL)
+		return NULL;
+
+	session = (struct s_gelibhelper_io_channel*)handle;
+
+	return session->parent->userdata;
+}
 
 /**
  *
@@ -54,6 +100,7 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 	struct s_gelibhelper_io_channel *del_session = NULL;
 	GList* listptr = NULL;
 	int sessionfd = -1;
+	gboolean receiveret = TRUE;
 
 	if (source == NULL || data == NULL)
 		return FALSE;// Arg error -> Stop callback Fail safe
@@ -98,12 +145,12 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 		}
 #endif
 	} else if ((condition & G_IO_IN) != 0) {	// receive data
-		//dummy read
-		uint64_t hoge[4];
-		int fd = g_io_channel_unix_get_fd (source);
-		int ret = read(fd, hoge, sizeof(hoge));
-		fprintf (stderr, "cli in %d\n",ret);
-		
+		// receive callback
+		if (helper->operation.receive != NULL) {
+			receiveret = helper->operation.receive((glibhelper_server_session_handle)session);
+			if (receiveret == FALSE)
+				return FALSE;
+		}
 	} else {	//	G_IO_NVAL or undefined
 		return FALSE;	// When this event return FALSE, this event watch is disabled
 	}
