@@ -31,7 +31,11 @@ char exampledata[1024];
 //-----------------------------------------------------------------------------
 static gboolean receive_cb(glibhelper_client_session_handle session)
 {
-	
+	ssize_t ret = 0;
+
+	ret = glibhelper_client_socket_read(session, exampledata, sizeof(exampledata));
+	fprintf (stderr, "cli in %ld\n",ret);
+
 	return TRUE;
 }
 //-----------------------------------------------------------------------------
@@ -47,15 +51,13 @@ static void destroyed_session_cb(glibhelper_client_session_handle session)
 //-----------------------------------------------------------------------------
 static gboolean timeout_cb(glibhelper_timerfd_support_handle handle)
 {
-	int fd = -1;
 	ssize_t ret = -1; 
 	example_data_struct *ex;
 	
 	ex = (example_data_struct *)glibhelper_timerfd_get_userdata(handle);
 
 	if (ex->sochandle != NULL) {
-		fd = glibhelper_client_get_fd(ex->sochandle);
-		ret = write(fd, exampledata, sizeof(exampledata));   
+		ret = glibhelper_client_socket_write(ex->sochandle,exampledata, sizeof(exampledata)); 
 	}
 	fprintf (stderr, "timer cb\n");
 
@@ -76,7 +78,7 @@ int main (int argc, char **argv)
 	GMainLoop *gloop = NULL;
 	int ret = -1;
 	gboolean bret = FALSE;
-	example_data_struct ex;
+	example_data_struct ex= {NULL};
 
 	glibhelper_unix_socket_client_support sochandle = NULL;;
 	glibhelper_timerfd_support_handle timerhandle = NULL;
@@ -113,8 +115,8 @@ finish:
 	if (timerhandle != NULL)
 		glibhelper_terminate_timerfd(timerhandle);
 
-	if (sochandle != NULL)
-		glibhelper_terminate_client_socket(sochandle);
+	if (ex.sochandle != NULL)
+		glibhelper_terminate_client_socket(ex.sochandle);
 
 	fprintf(stderr,"term!!\n");
 

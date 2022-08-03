@@ -20,6 +20,7 @@
 
 struct s_gelibhelper_io_channel {
 	GIOChannel *gio_source;
+	GSource *event_source;
 	guint id;
 };
 
@@ -45,7 +46,7 @@ void* glibhelper_timerfd_get_userdata(glibhelper_timerfd_support_handle handle)
 	struct s_glibhelper_timerfd_support *helper = NULL;
 
 	if ( handle == NULL)
-		return -1;
+		return NULL;
 
 	helper = (struct s_glibhelper_timerfd_support*)handle;
 
@@ -155,6 +156,7 @@ gboolean glibhelper_create_timerfd(glibhelper_timerfd_support_handle *handle, GM
 
 	helper->operation = config->operation;
 	helper->timer.gio_source = gtimerfdio;
+	helper->timer.event_source = gtimerfdsource;
 	helper->timer.id = id;
 	helper->context = context;
 	helper->userdata = userdata;
@@ -195,7 +197,8 @@ gboolean glibhelper_terminate_timerfd(glibhelper_timerfd_support_handle handle)
 
 	helper = (struct s_glibhelper_timerfd_support *)handle;
 
-	// Destroy server socket
+	// Destroy timerfd
+	g_source_destroy(helper->timer.event_source);
 	g_io_channel_unref(helper->timer.gio_source);
 	g_free(helper);
 

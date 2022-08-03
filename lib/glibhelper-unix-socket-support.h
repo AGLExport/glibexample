@@ -62,12 +62,20 @@ gboolean glibhelper_create_server_socket(glibhelper_unix_socket_server_support *
 gboolean glibhelper_terminate_server_socket(glibhelper_unix_socket_server_support handle);
 int glibhelper_server_get_fd(glibhelper_server_session_handle handle);
 void* glibhelper_server_get_userdata(glibhelper_server_session_handle handle);
+ssize_t glibhelper_server_socket_read(glibhelper_server_session_handle handle, void *buf, size_t count);
+ssize_t glibhelper_server_socket_write(glibhelper_server_session_handle handle, void *buf, size_t count);
+glibhelper_unix_socket_server_support glibhelper_server_socket_server_support_from_session_handle(glibhelper_server_session_handle handle);
+int glibhelper_server_socket_broadcast(glibhelper_unix_socket_server_support handle, void *buf, size_t count);
+
 
 //-----------------------------------------------------------------------------
 gboolean glibhelper_connect_socket(glibhelper_unix_socket_client_support *handle, GMainContext *context, glibhelper_client_socket_config *config, void* userdata);
 gboolean glibhelper_terminate_client_socket(glibhelper_unix_socket_client_support handle);
 int glibhelper_client_get_fd(glibhelper_client_session_handle handle);
 void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle);
+ssize_t glibhelper_client_socket_read(glibhelper_client_session_handle handle, void *buf, size_t count);
+ssize_t glibhelper_client_socket_write(glibhelper_client_session_handle handle, void *buf, size_t count);
+
 
 //-----------------------------------------------------------------------------
 #endif //#ifndef GLIBHELPER_UINX_SOCKET_SUPPORT_H

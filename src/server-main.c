@@ -22,6 +22,11 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+typedef struct s_example_data_struct {
+	glibhelper_unix_socket_server_support sochandle;
+	glibhelper_timerfd_support_handle timerfd;
+} example_data_struct;
+
 //-----------------------------------------------------------------------------
 static void get_new_session_cb(glibhelper_server_session_handle session)
 {
@@ -32,9 +37,12 @@ static gboolean receive_cb(glibhelper_server_session_handle session)
 {
 	//dummy read
 	uint64_t hoge[4];
-	int fd = glibhelper_server_get_fd(session);
-	int ret = read(fd, hoge, sizeof(hoge));
-	fprintf (stderr, "cli in %d\n",ret);
+
+	ssize_t ret = glibhelper_server_socket_read(session, hoge, sizeof(hoge));
+	fprintf (stderr, "cli in %ld\n",ret);
+
+	ssize_t ret2 = glibhelper_server_socket_write(session, hoge, sizeof(hoge));
+	fprintf (stderr, "cli to %ld\n",ret);
 
 	return TRUE;
 }
@@ -46,7 +54,19 @@ static void destroyed_session_cb(glibhelper_server_session_handle session)
 //-----------------------------------------------------------------------------
 static gboolean timeout_cb(glibhelper_timerfd_support_handle handle)
 {
+	uint64_t bb[2];
+	example_data_struct *ex = NULL;
+	void *ptr = NULL;
+	int ret = -1;
+
 	fprintf (stderr, "timer cb\n");
+
+	ptr = glibhelper_timerfd_get_userdata(handle);
+	if (ptr != NULL) {
+		ex = (example_data_struct*)ptr;
+		ret = glibhelper_server_socket_broadcast(ex->sochandle, bb, sizeof(bb));
+		fprintf (stderr, "broad cast to %d clients\n",ret);
+	}
 
 	return TRUE;
 }
@@ -65,6 +85,7 @@ int main (int argc, char **argv)
 	GMainLoop *gloop = NULL;
 	int ret = -1;
 	gboolean bret = FALSE;
+	example_data_struct ex = {0};
 
 	glibhelper_unix_socket_server_support sochandle = NULL;;
 	glibhelper_timerfd_support_handle timerhandle = NULL;
@@ -84,25 +105,27 @@ int main (int argc, char **argv)
 
 	tcfg.operation.timeout = timeout_cb;
 
-	bret = glibhelper_create_server_socket(&sochandle, NULL, &scfg, NULL);
+	bret = glibhelper_create_server_socket(&sochandle, NULL, &scfg, &ex);
 	if (bret != TRUE) {
 		fprintf(stderr,"glibhelper_create_server_socket error\n");
 	}
+	ex.sochandle = sochandle;
 
-	bret = glibhelper_create_timerfd(&timerhandle, NULL, &tcfg, NULL);
+	bret = glibhelper_create_timerfd(&timerhandle, NULL, &tcfg, &ex);
 	if (bret != TRUE) {
 		fprintf(stderr,"glibhelper_create_timerfd error\n");
 	}
+	ex.timerfd = timerhandle;
 
     g_main_loop_run(gloop);
 
 finish:
 
-	if (timerhandle != NULL)
-		glibhelper_terminate_timerfd(timerhandle);
+	if (ex.timerfd != NULL)
+		glibhelper_terminate_timerfd(ex.timerfd);
 
-	if (sochandle != NULL)
-		glibhelper_terminate_server_socket(sochandle);
+	if (ex.sochandle != NULL)
+		glibhelper_terminate_server_socket(ex.sochandle);
 
 	fprintf(stderr,"term!!\n");
 

@@ -33,16 +33,15 @@ struct s_glibhelper_unix_socket_client_support {
 };
 
 /**
+ * Get session socket fd from client session handle.
  *
+ * @param [in]	handle	Server session handle
  *
- * @param [in]	source	Pointor for active GIOChannel
- * @param [in]	condition	I/O event condition.
- * @param [in]	data	Pointer for 
- *
- * @return gboolean
- * @retval TRUES Success callback or non abnormal error.
- * @retval FALSE Critical error. Callback stop.
+ * @return int
+ * @retval >=0 fd.
+ * @retval <0 error (Illegal handle)
  */
+
 int glibhelper_client_get_fd(glibhelper_client_session_handle handle)
 {
 	struct s_glibhelper_unix_socket_client_support *helper = NULL;
@@ -57,15 +56,14 @@ int glibhelper_client_get_fd(glibhelper_client_session_handle handle)
 	return fd;
 }
 /**
+ * Get userdata from client session handle.
+ * The userdata is set at glibhelper_connect_socket.
  *
+ * @param [in]	handle	Server session handle
  *
- * @param [in]	source	Pointor for active GIOChannel
- * @param [in]	condition	I/O event condition.
- * @param [in]	data	Pointer for 
- *
- * @return gboolean
- * @retval TRUES Success callback or non abnormal error.
- * @retval FALSE Critical error. Callback stop.
+ * @return void*
+ * @retval !NULL userdata.
+ * @retval NULL userdata is NULL or Illegal handle error.
  */
 void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle)
 {
@@ -78,6 +76,76 @@ void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle)
 
 	return helper->userdata;
 }
+/**
+ * Read packet from socket using glibhelper_server_session_handle.
+ *
+ * @param [in]	handle	Client session handle
+ * @param [in]	buf Pointer to read buffer.
+ * @param [in]	counte Number of bytes for buffer.
+ *
+ * @return ssize_t
+ * @retval >=0 Number of bytes read.
+* @retval <0 error (refer to error no).
+ */
+ssize_t glibhelper_client_socket_read(glibhelper_client_session_handle handle, void *buf, size_t count)
+{
+	struct s_glibhelper_unix_socket_client_support *helper = NULL;
+	ssize_t ret = -1;
+	int fd = -1;
+
+	if ( handle == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	fd = glibhelper_client_get_fd(handle);
+	if (fd < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	do {
+		ret = read(fd, buf, count);
+	} while((ret == -1) && (errno == EINTR));
+
+	return ret;
+}
+/**
+ * Write packet to socket using glibhelper_server_session_handle.
+ *
+ * @param [in]	handle	Client session handle
+ * @param [in]	buf Pointer to write data buffer.
+ * @param [in]	counte Number of bytes for buffer.
+ *
+ * @return ssize_t
+ * @retval >=0 Number of bytes read.
+ * @retval <0 error (refer to error no).
+ */
+ssize_t glibhelper_client_socket_write(glibhelper_client_session_handle handle, void *buf, size_t count)
+{
+	struct s_glibhelper_unix_socket_client_support *helper = NULL;
+	ssize_t ret = -1;
+	int fd = -1;
+
+	if ( handle == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	fd = glibhelper_client_get_fd(handle);
+	if (fd < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	do {
+		ret = write(fd, buf, count);
+	} while((ret == -1) && (errno == EINTR));
+
+	return ret;
+
+}
+
 /**
  *
  *
@@ -94,8 +162,7 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 								gpointer data)
 {
 	struct s_glibhelper_unix_socket_client_support *helper = NULL;
-	//struct s_gelibhelper_io_channel *session = NULL;
-	//GList* listptr = NULL;
+	gboolean bret = TRUE;
 	int sessionfd = -1;
 
 	if (source == NULL || data == NULL)
@@ -113,17 +180,13 @@ static gboolean clientchannel_socket_event (GIOChannel *source,
 		g_io_channel_unref(helper->cli.gio_source);
 		g_free(helper);
 	} else if ((condition & G_IO_IN) != 0) {	// receive data
-		//dummy read
-		uint64_t hoge[4];
-		int fd = g_io_channel_unix_get_fd (source);
-		int ret = read(fd, hoge, sizeof(hoge));
-		fprintf (stderr, "cli in %d\n",ret);
-		
+		if (helper->operation.receive != NULL)
+			bret = helper->operation.receive((glibhelper_client_session_handle)helper);
 	} else {	//	G_IO_NVAL or undefined
-		return FALSE;	// When this event return FALSE, this event watch is disabled
+		bret = FALSE;	// When this event return FALSE, this event watch is disabled
 	}
 
-	return TRUE;
+	return bret;
 }
 
 /**
