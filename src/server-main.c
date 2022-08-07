@@ -16,6 +16,7 @@
 #include "glibhelper-timerfd-support.h"
 #include "glibhelper-signal.h"
 
+#include "example-common.h"
 
 #define SOCKET_NAME "/tmp/9Lq7BNBnBycd6nxy.socket"
 
@@ -54,18 +55,22 @@ static void destroyed_session_cb(glibhelper_server_session_handle session)
 //-----------------------------------------------------------------------------
 static gboolean timeout_cb(glibhelper_timerfd_support_handle handle)
 {
-	uint64_t bb[2];
 	example_data_struct *ex = NULL;
 	void *ptr = NULL;
 	int ret = -1;
 
-	fprintf (stderr, "timer cb\n");
+	ex_command_str_t cmd;
+
+	//fprintf (stderr, "timer cb\n");
+	memset(&cmd,0,sizeof(cmd));
+	cmd.command = EX_COMMAND_SEND_STR;
+	strncpy(cmd.str, "broadcast to client from server", sizeof(cmd.str)-1);
 
 	ptr = glibhelper_timerfd_get_userdata(handle);
 	if (ptr != NULL) {
 		ex = (example_data_struct*)ptr;
-		ret = glibhelper_server_socket_broadcast(ex->sochandle, bb, sizeof(bb));
-		fprintf (stderr, "broad cast to %d clients\n",ret);
+		ret = glibhelper_server_socket_broadcast(ex->sochandle, &cmd, sizeof(cmd));
+		fprintf (stderr, "broadcast to client from server (client = %d)\n",ret);
 	}
 
 	return TRUE;

@@ -8,6 +8,7 @@ libglib_support_a_SOURCES = \
 	glibhelper-unix-socket-support-util.c \
 	glibhelper-unix-socket-support-server.c \
 	glibhelper-unix-socket-support-client.c \
+	glibhelper-unix-socket-support-internal.c \
 	glibhelper-timerfd-support.c \
 	glibhelper-signal.c
 

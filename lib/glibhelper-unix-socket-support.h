@@ -31,7 +31,7 @@ struct s_glibhelper_server_socket_operation {
 /** glibhelper_server_socket_config.*/
 typedef struct s_glibhelper_server_socket_config {
 	struct s_glibhelper_server_socket_operation operation; /**< server socket event handler. */
-	int socketbuf_size; /**< server socket buffer size roundup(packet_size * queue). */
+	int socketbuf_size; /**< server socket buffer size : roundup(packet_size * queue). */
 	char socket_name[92]; /**< server socket name. abs name or socket file name. */
 } glibhelper_server_socket_config;
 
@@ -56,6 +56,26 @@ typedef struct s_glibhelper_client_socket_config {
 	char socket_name[92]; /**< server socket name. abs name or socket file name. */
 } glibhelper_client_socket_config;
 
+//-----------------------------------------------------------------------------
+struct s_glibhelper_unix_socket_internal_support;
+typedef struct s_glibhelper_unix_socket_internal_support *glibhelper_unix_socket_internal_support;
+
+typedef void* glibhelper_internal_session_handle;
+
+
+typedef gboolean (*fp_receive_callback_in)(glibhelper_internal_session_handle session); 
+typedef void (*fp_destroyed_session_callback_in)(glibhelper_internal_session_handle session); 
+
+struct s_glibhelper_internal_socket_operation {
+	fp_receive_callback_in receive; /**< Callbuck for packet receive. */
+	fp_destroyed_session_callback_in destroyed_session; /**< Callbuck for destroyed session. */
+};
+
+/** glibhelper_server_socket_config.*/
+typedef struct s_glibhelper_internal_socket_config {
+	struct s_glibhelper_internal_socket_operation operation; /**< server socket event handler. */
+	int socketbuf_size; /**< socket buffer size : roundup(packet_size * queue). */
+} glibhelper_internal_socket_config;
 
 //-----------------------------------------------------------------------------
 gboolean glibhelper_create_server_socket(glibhelper_unix_socket_server_support *handle, GMainContext *context, glibhelper_server_socket_config *config, void *userdata);
@@ -75,6 +95,17 @@ int glibhelper_client_get_fd(glibhelper_client_session_handle handle);
 void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle);
 ssize_t glibhelper_client_socket_read(glibhelper_client_session_handle handle, void *buf, size_t count);
 ssize_t glibhelper_client_socket_write(glibhelper_client_session_handle handle, void *buf, size_t count);
+
+
+//-----------------------------------------------------------------------------
+gboolean glibhelper_create_internal_socket(glibhelper_unix_socket_internal_support *handle, GMainContext *context, glibhelper_internal_socket_config *config, void* userdata);
+gboolean glibhelper_bind_secondary_internal_socket(glibhelper_unix_socket_internal_support *secondary_handle, glibhelper_unix_socket_internal_support primary_handle, 
+	GMainContext *context, glibhelper_internal_socket_config *config, void* userdata);
+gboolean glibhelper_terminate_internal_socket(glibhelper_unix_socket_internal_support handle);
+int glibhelper_internal_get_fd(glibhelper_internal_session_handle handle);
+void* glibhelper_internal_get_userdata(glibhelper_internal_session_handle handle);
+ssize_t glibhelper_internal_socket_read(glibhelper_internal_session_handle handle, void *buf, size_t count);
+ssize_t glibhelper_internal_socket_write(glibhelper_internal_session_handle handle, void *buf, size_t count);
 
 
 //-----------------------------------------------------------------------------

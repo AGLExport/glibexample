@@ -302,7 +302,8 @@ static gboolean server_socket_event (GIOChannel *source,
 				return FALSE;
 		}
 
-		(void)setsockopt(clifd, SOL_SOCKET, SO_SNDBUF, &helper->socketbuf_size, sizeof(helper->socketbuf_size));
+		if (helper->socketbuf_size > 0)
+			(void)setsockopt(clifd, SOL_SOCKET, SO_SNDBUF, &helper->socketbuf_size, sizeof(helper->socketbuf_size));
 
 		new_session_io = g_io_channel_unix_new (clifd);
 		if (new_session_io == NULL) {

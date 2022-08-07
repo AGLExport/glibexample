@@ -20,7 +20,7 @@
 #include "glibhelper-unix-socket-support.h"
 
 struct s_gelibhelper_io_channel {
-	struct s_glibhelper_unix_socket_support *parent;
+	struct s_glibhelper_unix_socket_client_support *parent;
 	GIOChannel *gio_source;
 	GSource *event_source;
 };
@@ -77,7 +77,7 @@ void* glibhelper_client_get_userdata(glibhelper_client_session_handle handle)
 	return helper->userdata;
 }
 /**
- * Read packet from socket using glibhelper_server_session_handle.
+ * Read packet from socket using glibhelper_client_session_handle.
  *
  * @param [in]	handle	Client session handle
  * @param [in]	buf Pointer to read buffer.
@@ -111,7 +111,7 @@ ssize_t glibhelper_client_socket_read(glibhelper_client_session_handle handle, v
 	return ret;
 }
 /**
- * Write packet to socket using glibhelper_server_session_handle.
+ * Write packet to socket using glibhelper_client_session_handle.
  *
  * @param [in]	handle	Client session handle
  * @param [in]	buf Pointer to write data buffer.
@@ -263,6 +263,7 @@ gboolean glibhelper_connect_socket(glibhelper_unix_socket_client_support *handle
 	helper->operation = config->operation;
 	helper->cli.gio_source = gcliio;
 	helper->cli.event_source = gclisource;
+	helper->cli.parent = helper;
 	helper->context = context;
 	helper->userdata = userdata;
 
